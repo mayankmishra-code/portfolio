@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mayank Mishra | AI Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles-slim@2.12.0/tsparticles.slim.bundle.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; overflow-x: hidden; background-color: #0a0a0c;}
+        
+        /* Integrated Background Photo with Gradient Overlay */
+        .hero-bg-image {
+            background: linear-gradient(to bottom, rgba(10, 10, 12, 0.6), rgba(10, 10, 12, 0.95)), url('profile.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px;}
+        
+        /* Timeline Logic (Fixed for your original style) */
+        .timeline::after { content: ''; position: absolute; width: 6px; background-color: rgba(59, 130, 246, 0.3); top: 0; bottom: 0; left: 50%; margin-left: -3px;}
+        .timeline-item { position: relative; width: 50%; padding: 10px 40px; box-sizing: border-box;}
+        .timeline-item::after { content: ''; position: absolute; width: 25px; height: 25px; right: -17px; background-color: #2563EB; top: 15px; border-radius: 50%; z-index: 1;}
+        .timeline-right { left: 50%; padding: 10px 40px;}
+        .timeline-right::after { left: -12px;}
+        .timeline-left { left: 0%; text-align: right;}
+        .timeline-content { padding: 20px; position: relative; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px;}
+
+        [data-aos] { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease;}
+        [data-aos].aos-animate { opacity: 1; transform: translateY(0);}
+        #particles-js { position: absolute; width: 100%; height: 100%; top: 0; left: 0; z-index: 1;}
+    </style>
+</head>
+<div id="chat-widget" class="fixed bottom-6 right-6 z-[100]">
+    <button onclick="toggleChat()" class="bg-blue-600 w-16 h-16 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-all">
+        <i class="fas fa-robot text-2xl text-white"></i>
+    </button>
+
+    <div id="chat-window" class="hidden absolute bottom-20 right-0 w-80 md:w-96 glass-card flex flex-col overflow-hidden shadow-2xl border-blue-500/30">
+        <div class="bg-blue-600 p-4 font-bold flex justify-between">
+            <span>Mayank's AI Assistant</span>
+            <button onclick="toggleChat()"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="chat-box" class="h-80 overflow-y-auto p-4 space-y-4 text-sm bg-[#0a0a0c]/90">
+            <div class="bg-blue-900/30 p-2 rounded-lg text-gray-200">Hello! I'm Mayank's AI. Ask me about his projects or skills!</div>
+        </div>
+        <div class="p-3 border-t border-white/10 bg-[#0a0a0c] flex gap-2">
+            <input id="user-input" type="text" placeholder="Ask something..." class="bg-white/5 border border-white/10 rounded-full px-4 py-2 w-full outline-none focus:border-blue-500 text-xs">
+            <button onclick="sendMessage()" class="text-blue-500"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. Toggle Chat Window
+    function toggleChat() {
+        const chatWin = document.getElementById('chat-window');
+        chatWin.classList.toggle('hidden');
+    }
+
+    // 2. Main Chat Logic
+    const API_KEY = "AIzaSyA_aL3LKaZ6jf7LrCewRNzost5xW-u5JGI"; 
+
+    async function sendMessage() {
+        const input = document.getElementById('user-input');
+        const chatBox = document.getElementById('chat-box');
+        const userText = input.value.trim();
+        
+        if(!userText) return;
+
+        // Show User Message
+        chatBox.innerHTML += `<div class="text-right mb-2"><span class="bg-blue-600 p-2 rounded-lg inline-block text-xs text-white">${userText}</span></div>`;
+        input.value = '';
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        // Show "Thinking..." Indicator
+        const typingId = "typing-" + Date.now();
+        chatBox.innerHTML += `<div id="${typingId}" class="text-left mb-2"><span class="bg-white/10 p-2 rounded-lg inline-block text-xs italic text-gray-400">🤖 AI is thinking...</span></div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        try {
+            const targetUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+            
+            // Using AllOrigins proxy which is more reliable for direct HTML/JS calls
+            const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`, {
+                method: "POST", // Note: Some proxies require a different structure
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{ text: `You are Mayank Mishra's personal AI. 
+                        Context: 1st year B.Tech CSE-AI student at KCC ITM. 
+                        Projects: Voice Guard (AI safety app). 
+                        Skills: Python, C++, JS, Tailwind. 
+                        Tone: Helpful and professional.
+                        User asked: ${userText}` }]
+                    }]
+                })
+            });
+
+            // If proxy blocks POST, we use a cleaner direct approach with a fallback
+            const directResponse = await fetch(targetUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{ text: `You are Mayank's AI assistant. Answer this: ${userText}` }]
+                    }]
+                })
+            });
+
+            const data = await directResponse.json();
+            
+            if (data.error) {
+                throw new Error(data.error.message);
+            }
+
+            const aiText = data.candidates[0].content.parts[0].text;
+
+            // Remove Typing and Show Response
+            const typingElement = document.getElementById(typingId);
+            if(typingElement) typingElement.remove();
+            
+            chatBox.innerHTML += `<div class="text-left mb-2"><span class="bg-white/10 p-2 rounded-lg inline-block text-xs text-gray-200">🤖 ${aiText}</span></div>`;
+
+        } catch (error) {
+            console.error("Chat Error:", error);
+            const typingElement = document.getElementById(typingId);
+            if(typingElement) typingElement.remove();
+            chatBox.innerHTML += `<div class="text-left mb-2"><span class="bg-red-900/40 p-2 rounded-lg inline-block text-xs text-red-300">⚠️ Error: Please check your API key or connection.</span></div>`;
+        }
+        
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Allow "Enter" key to send message
+    document.addEventListener('DOMContentLoaded', () => {
+        const inputField = document.getElementById('user-input');
+        if(inputField) {
+            inputField.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        }
+    });
+</script>
+<body class="text-white">
+
+    <div id="particles-js"></div>
+
+    <nav class="fixed w-full z-50 py-4 px-6 md:px-12 flex justify-between items-center glass-card border-none bg-[#0a0a0c]/80 backdrop-blur-sm shadow-md">
+        <div class="flex items-center gap-3">
+            <i class="fas fa-brain text-2xl text-blue-500"></i>
+            <div class="text-xl font-extrabold tracking-tighter text-white">MAYANK_AI.</div>
+        </div>
+        <div class="space-x-8 text-sm font-medium text-gray-400 hidden md:block">
+            <a href="#home" class="hover:text-blue-500 transition">Home</a>
+            <a href="#projects" class="hover:text-blue-500 transition">Projects</a>
+            <a href="#skills" class="hover:text-blue-500 transition">Skills</a>
+            <a href="#achievements" class="hover:text-blue-500 transition">Timeline</a>
+            <a href="#contact" class="hover:text-blue-500 transition">Connect</a>
+        </div>
+    </nav>
+
+    <section id="home" class="hero-bg-image min-h-screen flex flex-col justify-center items-center text-center px-4 pt-32 pb-16 relative z-10">
+        <div class="mb-10 relative">
+            <div class="w-48 h-48 md:w-60 md:h-60 rounded-full border-4 border-blue-600/50 overflow-hidden shadow-[0_0_80px_rgba(37,99,235,0.4)] relative">
+                <img src="profile.jpeg" alt="Mayank Mishra" class="w-full h-full object-cover">
+            </div>
+            <div class="absolute -bottom-3 -right-3 bg-blue-500 w-10 h-10 rounded-full border-4 border-[#0a0a0c] flex items-center justify-center text-xs font-bold text-white shadow-xl">AI</div>
+        </div>
+
+        <h1 class="text-5xl md:text-8xl font-black mb-6 tracking-tight leading-none text-white drop-shadow-2xl">Mayank <span class="text-blue-600">Mishra</span></h1>
+        
+        <p class="text-lg md:text-xl text-gray-300 max-w-2xl mb-10">
+    CSE AI Student @ 
+    <a href="https://www.kccitm.edu.in/" 
+       target="_blank" 
+       rel="noopener noreferrer" 
+       class="text-blue-400 font-bold hover:text-blue-300 underline decoration-blue-500/30 underline-offset-4 transition-all">
+       KCC ITM
+    </a> 
+    | Full-time Innovator.
+</p>
+
+        <div class="flex gap-4">
+            <a href="#projects" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-full font-bold transition flex items-center gap-2 shadow-lg">
+                <i class="fas fa-rocket"></i> View My Creations
+            </a>
+            <a href="#contact" class="glass-card px-10 py-4 rounded-full font-bold hover:bg-white/5 transition flex items-center gap-2">
+                Let's Talk <i class="fas fa-paper-plane"></i>
+            </a>
+        </div>
+    </section>
+
+    <section id="projects" class="py-24 px-6 md:px-12 max-w-7xl mx-auto relative z-10">
+        <h2 class="text-4xl font-black mb-20 text-white flex items-center gap-4">
+            <span class="h-1 w-16 bg-blue-600 rounded-full"></span> My Innovation Hub
+        </h2>
+       <div class="glass-card p-10 flex flex-col hover:border-blue-500/60 transition duration-500 transform hover:-translate-y-2 relative group overflow-hidden">
+    <div class="absolute -bottom-20 -right-20 w-80 h-80 bg-blue-600/5 rounded-full blur-[100px]"></div>
+    
+    <div class="w-16 h-16 glass-card bg-blue-600/20 rounded-2xl flex items-center justify-center mb-8 border-none group-hover:bg-blue-600 transition">
+        <i class="fas fa-microphone-lines text-3xl text-blue-500 group-hover:text-white"></i>
+    </div>
+    
+    <h3 class="text-3xl font-black text-white mb-4">Voice Guard</h3>
+    <p class="text-gray-400 mb-8 leading-relaxed flex-grow">
+        Revolutionizing safety with AI. Voice Guard detects critical audio cues to automatically trigger alerts and send locations.
+    </p>
+
+    <div class="flex items-center justify-between mt-auto">
+        <div class="flex gap-3 text-[11px] font-bold uppercase tracking-widest text-blue-400">
+            <span>JS & AI</span> • <span>Security</span>
+        </div>
+        <a href="https://voicegaurd.netlify.app/" 
+           target="_blank" 
+           rel="noopener noreferrer" 
+           class="bg-white text-black hover:bg-blue-600 hover:text-white px-6 py-3 rounded-full font-bold transition flex items-center gap-2 z-20">
+            Live Demo <i class="fas fa-external-link-alt text-xs"></i>
+        </a>
+    </div>
+</div>
+    </section>
+
+    <section id="skills" class="py-24 px-6 md:px-12 max-w-6xl mx-auto relative z-10">
+        <h2 class="text-4xl font-black mb-20 text-white flex items-center gap-4 justify-center">
+            Skill Symphony <i class="fas fa-terminal text-3xl text-blue-600 ml-3"></i>
+        </h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div class="glass-card p-8 text-center flex flex-col items-center hover:scale-105 transition-all">
+                <i class="fas fa-code text-5xl text-blue-500 mb-6"></i>
+                <h4 class="text-xl font-bold mb-2">Languages</h4>
+                <p class="text-gray-400 text-sm">Python, JavaScript, C++</p>
+            </div>
+            <div class="glass-card p-8 text-center flex flex-col items-center hover:scale-105 transition-all">
+                <i class="fas fa-brain text-5xl text-purple-500 mb-6"></i>
+                <h4 class="text-xl font-bold mb-2">AI Frameworks</h4>
+                <p class="text-gray-400 text-sm">TensorFlow, PyTorch</p>
+            </div>
+            <div class="glass-card p-8 text-center flex flex-col items-center hover:scale-105 transition-all">
+                <i class="fas fa-layer-group text-5xl text-green-500 mb-6"></i>
+                <h4 class="text-xl font-bold mb-2">Web Stack</h4>
+                <p class="text-gray-400 text-sm">React, Node, Tailwind</p>
+            </div>
+            <div class="glass-card p-8 text-center flex flex-col items-center hover:scale-105 transition-all">
+                <i class="fas fa-lightbulb text-5xl text-yellow-500 mb-6"></i>
+                <h4 class="text-xl font-bold mb-2">Logic</h4>
+                <p class="text-gray-400 text-sm">Algorithms, DS</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="achievements" class="py-24 px-6 md:px-12 bg-[#0d0d10] relative z-10">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-4xl font-black mb-20 text-white flex items-center gap-4 justify-center"> Achievement Timeline <i class="fas fa-calendar-alt text-3xl text-blue-600 ml-3"></i></h2>
+            <div class="timeline relative overflow-hidden">
+                <div class="timeline-item timeline-left" data-aos>
+                    <div class="timeline-content shadow-lg">
+                        <h4 class="text-xl font-bold text-white mb-1">Joined KCC ITM</h4>
+                        <p class="text-sm text-blue-400 font-medium mb-3">Aug 2025</p>
+                        <p class="text-gray-400 text-sm">Started B.Tech journey in CSE-AI specialization.</p>
+                    </div>
+                </div>
+                <div class="timeline-item timeline-right" data-aos>
+                    <div class="timeline-content shadow-lg">
+                        <h4 class="text-xl font-bold text-white mb-1">Voice Guard V1</h4>
+                        <p class="text-sm text-blue-400 font-medium mb-3">Oct 2025</p>
+                        <p class="text-gray-400 text-sm">Built the core emergency detection engine.</p>
+                    </div>
+                </div>
+                <div class="timeline-item timeline-left" data-aos>
+                    <div class="timeline-content shadow-lg">
+                        <h4 class="text-xl font-bold text-white mb-1">Hackathon Star</h4>
+                        <p class="text-sm text-blue-400 font-medium mb-3">Jan 2026</p>
+                        <p class="text-gray-400 text-sm">Cleared initial rounds with flying colors at Buildathon.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="py-24 px-6 relative z-10">
+        <div class="max-w-4xl mx-auto text-center glass-card p-12">
+            <h2 class="text-4xl font-black mb-16 text-white">Let's Innovate Together</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+                <div class="glass-card p-8 flex flex-col items-center hover:bg-blue-600/10 transition">
+                    <i class="fas fa-phone-alt text-blue-500 mb-5 text-3xl"></i>
+                    <p class="font-semibold">+91 8115060593</p>
+                </div>
+                <div class="glass-card p-8 flex flex-col items-center hover:bg-blue-600/10 transition">
+                    <i class="fab fa-linkedin-in text-blue-500 mb-5 text-3xl"></i>
+                    <a href="https://www.linkedin.com/in/mayank-mishra-972326383" target="_blank" class="font-semibold">LinkedIn</a>
+                </div>
+                <div class="glass-card p-8 flex flex-col items-center hover:bg-blue-600/10 transition">
+                    <i class="fab fa-github text-blue-500 mb-5 text-3xl"></i>
+                    <a href="https://github.com/mayankmishra-code" target="_blank" class="font-semibold">GitHub</a>
+                </div>
+            </div>
+            <a href="mailto:mayankmishra.81150@gmail.com" class="bg-blue-600 text-white px-10 py-4 rounded-full font-bold shadow-lg inline-flex gap-2">
+                <i class="fas fa-envelope"></i> Email Me
+            </a>
+        </div>
+    </section>
+
+    <footer class="py-12 text-center border-t border-white/5 bg-[#0a0a0c] text-gray-600 text-xs">
+        <p>© 2026 Mayank Mishra • Crafted for the Future</p>
+    </footer>
+
+    <script>
+        // AOS Implementation
+        const aosElements = document.querySelectorAll('[data-aos]');
+        const checkAOS = () => {
+            aosElements.forEach(el => {
+                if (el.getBoundingClientRect().top < window.innerHeight - 100) el.classList.add('aos-animate');
+            });
+        };
+        window.addEventListener('scroll', checkAOS);
+        window.addEventListener('load', checkAOS);
+        
+        // Particles
+        tsparticles.load("particles-js", {
+            fpsLimit: 60,
+            particles: {
+                color: { value: "#3b82f6" },
+                links: { color: "#3b82f6", distance: 150, enable: true, opacity: 0.1, width: 1 },
+                move: { enable: true, speed: 0.8 },
+                number: { density: { enable: true, area: 800 }, value: 40 },
+                opacity: { value: 0.2 },
+                size: { value: { min: 1, max: 2 } }
+            }
+        });
+    </script>
+</body>
+</html>
